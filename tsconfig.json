@@ -1,8 +1,10 @@
 {
   "compilerOptions": {
     "module": "commonjs",
+    "moduleResolution": "node",
     "target": "ES5",
     "outDir": "ts-built",
     "rootDir": "src"
-  }
+  },
+  "exclude": ["node_modules"]
 }

@@ -6,7 +6,7 @@ export class Message {
     public text: string
   ) {}
 
-  transportMessage() {
+  messageJSON() {
     return {
       from: this.from,
       to: this.to,

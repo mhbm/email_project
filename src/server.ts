@@ -17,7 +17,7 @@ let transport = nodemailer.createTransport({
   secure: true,
   auth: {
     user: email.user,
-    pass: email.pass
+    pass: email.password
   },
   tls: {
     rejectUnauthorized: false
@@ -31,6 +31,7 @@ const message = new Message(
   "Have the most fun you can in a car. Get your Tesla today!"
 );
 
+/*
 let teste = message.transportMessage();
 
 console.log(teste);
@@ -44,3 +45,4 @@ transport.sendMail(message.transportMessage(), (error, info) => {
 
   console.log(info);
 });
+*/

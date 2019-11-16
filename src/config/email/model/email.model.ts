@@ -1,3 +1,3 @@
 export class Email {
-  constructor(public user: string, public pass: string) {}
+  constructor(public user: string, public password: string) {}
 }
