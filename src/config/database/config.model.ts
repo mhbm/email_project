@@ -18,7 +18,7 @@ export class Config {
   conection() {
     const con = this.__createConnection();
 
-    con.connect(error => {
+    con.connect((error: any) => {
       if (error) {
         console.log("Erro na conexão com o banco de dados : ", error);
         throw error;
