@@ -7,6 +7,8 @@ import { Message } from "../../config/email/model/message.model";
 
 import Imap = require("imap");
 import { imapConfig } from "./imapConfig";
+import { MailParser } from "mailparser";
+import BlueBird = require("bluebird");
 
 class EmailController {
   public sendMail(req: Request, res: Response) {
@@ -58,51 +60,67 @@ class EmailController {
       //debug: console.log
     });
 
+    //Promisifying IMAP
+    BlueBird.promisifyAll(imapServer);
+    imapServer.once("ready", () => {
+      // open Inbox
+      imapServer
+        .openBoxAsync("INBOX", true)
+        .then(box => {
+          // creating new promise for processing the messages
+          return new BlueBird((resolve, reject) => {
+            let messages = [];
+            // fetching messages
+            let f = imapServer.seq.fetch(
+              box.messages.total - 5 + ":" + box.messages.total,
+              {
+                bodies: [""]
+              }
+            );
+            f.on("message", (msg, seqno) => {
+              let message = {
+                sequenceNumber: seqno,
+                headers: null,
+                data: []
+              };
+              let mp = new MailParser();
+              mp.on("headers", headers => {
+                message.headers = headers;
+              }).on("data", obj => {
+                message.data.push(obj);
+              });
+              msg
+                .on("body", (stream, info) => {
+                  stream.pipe(mp);
+                })
+                .on("end", () => {
+                  messages.push(message);
+                });
+            }).on("end", function() {
+              resolve(messages);
+            });
+          });
+        })
+        .each(message => {
+          //Here you have final form of message
+          console.log("@@@@@\n");
+          console.log(message.data.length > 0 ? message.data[0].text : "nada");
+        })
+        .then(() => {
+          imapServer.end();
+          res.send("ok");
+        })
+        .catch(err => {
+          console.log("A error has occured: ", err);
+        });
+    });
+    imapServer.once("error", err => {
+      console.log("A error has occured: ", err);
+    });
+    imapServer.once("end", () => {
+      console.log("Connection ended");
+    });
     imapServer.connect();
-
-    imapServer.once("ready", function() {
-      console.log("Server status: %s", imapServer.state);
-      imapServer.openBox("INBOX", true, function(err, box) {
-        if (err) throw err;
-        let f = imapServer.seq.fetch(box.messages.total + ":*", {
-          bodies: ["TEXT", "HEADER.FIELDS (FROM TO SUBJECT DATE)"],
-          struct: true
-        });
-        f.on("message", function(msg, seqno) {
-          console.log("Message #%d", seqno);
-          var prefix = "(#" + seqno + ") ";
-          msg.on("body", function(stream, info) {
-            var buffer = "",
-              count = 0;
-            stream.on("data", function(chunk) {
-              count += chunk.length;
-              buffer += chunk.toString("utf8");
-              console.log("N2º =>", buffer, count);
-            });
-            stream.once("end", function() {
-              /*
-              console.log(
-                prefix + "Parsed header: %s",
-                Imap.parseHeader(buffer)
-              );
-              */
-            });
-          });
-          f.once("error", function(err) {
-            console.log("Fetch error: " + err);
-          });
-          f.once("end", function() {
-            console.log("Done fetching all messages!");
-            imapServer.end();
-          });
-        });
-      });
-      res.status(200).json("OK");
-    });
-    imapServer.once("error", function(err) {
-      console.log("Connection error: aaaaa" + err.stack);
-      return res.status(401).json(err);
-    });
   }
 }
 
