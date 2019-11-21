@@ -17,7 +17,8 @@ class App {
   }
 
   private routes(): void {
-    this.express.get("/", this.emailController.create);
+    this.express.get("/", this.emailController.sendMail);
+    this.express.get("/read", this.emailController.readMailBox);
   }
 }
 export default new App().express;
