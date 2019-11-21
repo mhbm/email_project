@@ -1,9 +1,10 @@
-import { Config } from "./config/database/config.model";
+import { ConfigDatabase, database } from "./config/database/config.model";
 
-const config = new Config("127.0.0.1", "root", "");
+const config = new ConfigDatabase(database.development.host, database.development.user, database.development.password, database.development.database);
 
-config.conection();
+config.connection();
 
+/*
 import nodemailer = require("nodemailer");
 
 import { Email } from "./config/email/model/email.model";

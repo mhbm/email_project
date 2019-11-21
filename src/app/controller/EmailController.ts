@@ -10,6 +10,8 @@ import { imapConfig } from "./imapConfig";
 import { MailParser } from "mailparser";
 import BlueBird = require("bluebird");
 
+import { Database } from "../../config/database/database";
+
 class EmailController {
   public sendMail(req: Request, res: Response) {
     const body = req.body;
@@ -48,6 +50,9 @@ class EmailController {
   }
 
   public readMailBox(req: Request, res: Response) {
+
+    let databaseTeste = new Database()
+
     let configuration = new imapConfig();
     console.log("Connecting to %s", configuration.host);
     let imapServer = new Imap({
@@ -96,15 +101,58 @@ class EmailController {
                 .on("end", () => {
                   messages.push(message);
                 });
-            }).on("end", function() {
+            }).on("end", function () {
               resolve(messages);
             });
           });
         })
-        .each(message => {
+        .each(async message => {
           //Here you have final form of message
-          console.log("@@@@@\n");
-          console.log(message.data.length > 0 ? message.data[0].text : "nada");
+          //console.log("@@@@@\n", message);
+          //console.log(message.data.length > 0 ? message.data[0].text : "nada");
+
+          if (message.data.length > 0) {
+
+
+            try {
+             const rows = await databaseTeste.checkExistEmail(
+              
+              message.headers.get('date'),
+              message.headers.get('subject')
+              //message.sequenceNumber,
+              //message.headers.get('subject'),
+              //'testeplusoft14@gmail.com',
+              //message.data[0].textAsHtml,
+            )
+            if (rows.length > 0) {
+              console.log("Encontrado no banco")
+
+            } else {
+              console.log("Não encontrado no banco")
+
+              try {
+                
+                const rowsInsert = await databaseTeste.insertEmail(
+                  message.sequenceNumber,
+                  message.headers.get('subject'),
+                  'testeplusoft14@gmail.com', //chumbado
+                  message.data[0].textAsHtml,
+                  message.headers.get('from').text,
+                  message.headers.get('date')
+                )
+                console.log("Inserido", rowsInsert)
+                } catch (e) {
+  
+                }
+            }
+           
+             } catch (error) {
+              //console.log("Erro na consulta : \n Code : %s \n Message : %s", error.code, error.sqlMessage)
+             }
+
+
+          }
+
         })
         .then(() => {
           imapServer.end();
