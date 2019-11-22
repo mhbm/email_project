@@ -12,6 +12,7 @@ import BlueBird = require("bluebird");
 
 import { Database } from "../../config/database/database";
 
+
 class EmailController {
   public sendMail(req: Request, res: Response) {
     const body = req.body;
@@ -49,12 +50,40 @@ class EmailController {
     });
   }
 
+  /**
+	 * readMailBox
+	 *
+	 * Responsável por ler a caixa de entrada do email/senha passado no request
+   * O padrão do request é :
+   *      {
+   *      "configEmail": {
+   *             "email": string,    
+   *            "password": string,
+   *             "office365" : boolean    ///verificador de é office365 ou não. Tem essa verificação para pegar a configuração
+   *         }
+   *      }
+	 *
+	 * @public
+	 * @author Mateus Macedo
+	 * @param  {express.Request} req the express request object
+	 * @param  {express.Response} res the express response object
+	 * @return {void}
+	 */
+
   public readMailBox(req: Request, res: Response) {
 
-    let databaseTeste = new Database()
+    const body = req.body;
 
-    let configuration = new imapConfig();
-    console.log("Connecting to %s", configuration.host);
+    let db = new Database()
+
+    let configuration = new imapConfig(body.configEmail.email, body.configEmail.password);
+
+    if (body.configEmail.office365 === true) {
+      configuration.configurationOffice365()
+    } else {
+      configuration.configurationGmail()
+    }
+
     let imapServer = new Imap({
       user: configuration.user,
       password: configuration.password,
@@ -70,24 +99,36 @@ class EmailController {
     imapServer.once("ready", () => {
       // open Inbox
       imapServer
-        .openBoxAsync("INBOX", true)
+        .openBoxAsync("INBOX", true) ///PEGANDO A CAIXA DE ENTRADA
         .then(box => {
           // creating new promise for processing the messages
           return new BlueBird((resolve, reject) => {
             let messages = [];
             // fetching messages
+
+            //Verificação da quantidade de email
+            let checkNumberEmail = box.messages.total - 5
+
+            if (checkNumberEmail <= 0) {
+              checkNumberEmail = 1
+            }
+
+            //Fazendo o fetch dos emails (pegando os ultimos 5 inseridos)
             let f = imapServer.seq.fetch(
-              box.messages.total - 5 + ":" + box.messages.total,
+              checkNumberEmail + ":" + box.messages.total,
               {
                 bodies: [""]
               }
             );
             f.on("message", (msg, seqno) => {
+
               let message = {
                 sequenceNumber: seqno,
                 headers: null,
                 data: []
               };
+
+              //utilizando a lib MailParser para ler as informações do email
               let mp = new MailParser();
               mp.on("headers", headers => {
                 message.headers = headers;
@@ -107,69 +148,191 @@ class EmailController {
           });
         })
         .each(async message => {
-          //Here you have final form of message
-          //console.log("@@@@@\n", message);
-          //console.log(message.data.length > 0 ? message.data[0].text : "nada");
 
           if (message.data.length > 0) {
-
-
             try {
-             const rows = await databaseTeste.checkExistEmail(
-              
-              message.headers.get('date'),
-              message.headers.get('subject')
-              //message.sequenceNumber,
-              //message.headers.get('subject'),
-              //'testeplusoft14@gmail.com',
-              //message.data[0].textAsHtml,
-            )
-            if (rows.length > 0) {
-              console.log("Encontrado no banco")
+              const rows = await db.checkExistEmail(
+                message.headers.get('date'),
+                message.headers.get('subject')
+              )
 
-            } else {
-              console.log("Não encontrado no banco")
+              if (rows.length > 0) {
+                console.log("Encontrado no banco")
+              } else {
+                console.log("Não encontrado no banco")
 
-              try {
-                
-                const rowsInsert = await databaseTeste.insertEmail(
-                  message.sequenceNumber,
-                  message.headers.get('subject'),
-                  'testeplusoft14@gmail.com', //chumbado
-                  message.data[0].textAsHtml,
-                  message.headers.get('from').text,
-                  message.headers.get('date')
-                )
-                console.log("Inserido", rowsInsert)
+                try {
+                  const rowsInsert = await db.insertEmail(
+                    message.sequenceNumber,
+                    message.headers.get('subject'),
+                    body.configEmail.email,
+                    message.data[0].textAsHtml,
+                    message.headers.get('from').text,
+                    message.headers.get('date')
+                  )
+                  console.log("Inserido", rowsInsert)
                 } catch (e) {
-  
+                  throw e
                 }
+              }
+
+            } catch (error) {
+              console.log("Erro na consulta : \n Code : %s \n Message : %s", error.code, error.sqlMessage)
+              throw error
             }
-           
-             } catch (error) {
-              //console.log("Erro na consulta : \n Code : %s \n Message : %s", error.code, error.sqlMessage)
-             }
-
-
           }
 
         })
         .then(() => {
           imapServer.end();
-          res.send("ok");
         })
         .catch(err => {
           console.log("A error has occured: ", err);
+          res.status(401).json(err)
         });
     });
     imapServer.once("error", err => {
       console.log("A error has occured: ", err);
+      res.status(401).json(err)
     });
     imapServer.once("end", () => {
       console.log("Connection ended");
+      res.send("ok");
     });
     imapServer.connect();
   }
+
+  public readMailBoxJob(email: string, password: string, office365: boolean) {
+
+    let db = new Database()
+
+    let configuration = new imapConfig(email, password);
+
+    if (office365 === true) {
+      configuration.configurationOffice365()
+    } else {
+      configuration.configurationGmail()
+    }
+
+    let imapServer = new Imap({
+      user: configuration.user,
+      password: configuration.password,
+      host: configuration.host,
+      port: configuration.port,
+      tls: configuration.tls,
+      tlsOptions: { rejectUnauthorized: false } //,
+      //debug: console.log
+    });
+
+    //Promisifying IMAP
+    BlueBird.promisifyAll(imapServer);
+    imapServer.once("ready", () => {
+      // open Inbox
+      imapServer
+        .openBoxAsync("INBOX", true) ///PEGANDO A CAIXA DE ENTRADA
+        .then(box => {
+          // creating new promise for processing the messages
+          return new BlueBird((resolve, reject) => {
+            let messages = [];
+            // fetching messages
+
+            //Verificação da quantidade de email
+            let checkNumberEmail = box.messages.total - 5
+
+            if (checkNumberEmail <= 0) {
+              checkNumberEmail = 1
+            }
+
+            //Fazendo o fetch dos emails (pegando os ultimos 5 inseridos)
+            let f = imapServer.seq.fetch(
+              checkNumberEmail + ":" + box.messages.total,
+              {
+                bodies: [""]
+              }
+            );
+            f.on("message", (msg, seqno) => {
+
+              let message = {
+                sequenceNumber: seqno,
+                headers: null,
+                data: []
+              };
+
+              //utilizando a lib MailParser para ler as informações do email
+              let mp = new MailParser();
+              mp.on("headers", headers => {
+                message.headers = headers;
+              }).on("data", obj => {
+                message.data.push(obj);
+              });
+              msg
+                .on("body", (stream, info) => {
+                  stream.pipe(mp);
+                })
+                .on("end", () => {
+                  messages.push(message);
+                });
+            }).on("end", function () {
+              resolve(messages);
+            });
+          });
+        })
+        .each(async message => {
+
+          if (message.data.length > 0) {
+            try {
+              const rows = await db.checkExistEmail(
+                message.headers.get('date'),
+                message.headers.get('subject')
+              )
+
+              if (rows.length > 0) {
+                console.log("Encontrado no banco")
+              } else {
+                console.log("Não encontrado no banco")
+
+                try {
+                  const rowsInsert = await db.insertEmail(
+                    message.sequenceNumber,
+                    message.headers.get('subject'),
+                    email,
+                    message.data[0].textAsHtml,
+                    message.headers.get('from').text,
+                    message.headers.get('date')
+                  )
+                  console.log("Inserido", rowsInsert)
+                } catch (e) {
+                  throw e
+                }
+              }
+
+            } catch (error) {
+              console.log("Erro na consulta : \n Code : %s \n Message : %s", error.code, error.sqlMessage)
+              throw error
+            }
+          }
+
+        })
+        .then(() => {
+          imapServer.end();
+        })
+        .catch(err => {
+          console.log("A error has occured: ", err);
+
+        });
+    });
+    imapServer.once("error", err => {
+      console.log("A error has occured: ", err);
+
+    });
+    imapServer.once("end", () => {
+      console.log("Connection ended");
+
+    });
+    imapServer.connect();
+  }
+
+
 }
 
 export default new EmailController();

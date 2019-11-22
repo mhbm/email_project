@@ -5,6 +5,7 @@
   "license": "MIT",
   "dependencies": {
     "bluebird": "^3.7.1",
+    "cron": "^1.7.2",
     "express": "^4.17.1",
     "imap": "^0.8.19",
     "mailparser": "^2.7.6",
