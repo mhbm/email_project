@@ -55,4 +55,20 @@ export class Database {
 
     }
 
+    async getMailConfigurationById(id: number) {
+        try {
+            //console.log(date.toISOString().slice(0, 19).replace('T', ' '))
+            const [rows, fields] = await this.connection.promise().query(
+                'SELECT * FROM `email_config` where `idemail_config` = ?',
+                //sql: 'SELECT * FROM `email` WHERE `sequenceNumber` = ? and `subject` = ? and `ds_email` = ? and `bodyEmail` = ?',
+                [id]
+            )
+            //console.log('rows => ', rows)
+            return  rows
+        } catch (error) {
+            console.log("Erro na consulta : \n Code : %s \n Message : %s", error.ode, error.sqlMessage)
+            throw error
+        }
+    }
+
 }
