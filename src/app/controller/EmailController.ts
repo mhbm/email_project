@@ -74,6 +74,8 @@ class EmailController {
 
     const body = req.body;
 
+    let errorReturn = {}
+
     let db = new Database()
 
     let configuration = new imapConfig(body.configEmail.email, body.configEmail.password);
@@ -94,6 +96,7 @@ class EmailController {
       //debug: console.log
     });
 
+   
     //Promisifying IMAP
     BlueBird.promisifyAll(imapServer);
     imapServer.once("ready", () => {
@@ -188,21 +191,35 @@ class EmailController {
         })
         .catch(err => {
           console.log("A error has occured: ", err);
-          res.status(401).json(err)
+
+          //res.status(401).json(err)
         });
     });
     imapServer.once("error", err => {
-      console.log("A error has occured: ", err);
-      res.status(401).json(err)
+      console.log("A error has occured:", err);
+      errorReturn = err;
+      //res.status(401).json(err)
+      
     });
     imapServer.once("end", () => {
       console.log("Connection ended");
-      res.send("ok");
+      if (errorReturn) {
+        res.status(401).json(errorReturn)
+      } else {
+        res.send("ok");
+      }
+      
+      
     });
     imapServer.connect();
   }
 
-  public readMailBoxJob(email: string, password: string, office365: boolean) {
+  public async readMailBoxJob(email: string, password: string, office365: boolean) {
+
+    return new Promise( (resolve, reject) => {
+
+    
+    let errorsReturn = {}
 
     let db = new Database()
 
@@ -226,6 +243,10 @@ class EmailController {
 
     //Promisifying IMAP
     BlueBird.promisifyAll(imapServer);
+
+
+    
+    imapServer.connect();
     imapServer.once("ready", () => {
       // open Inbox
       imapServer
@@ -321,15 +342,20 @@ class EmailController {
 
         });
     });
+
+    
     imapServer.once("error", err => {
       console.log("A error has occured: ", err);
-
+      reject(err)
+    
     });
+
     imapServer.once("end", () => {
-      console.log("Connection ended");
-
+      console.log("Connection ended");      
     });
-    imapServer.connect();
+
+  
+})
   }
 
 

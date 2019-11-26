@@ -3,6 +3,8 @@ import { ConfigDatabase, database } from "../../config/database/config.model";
 
 import { Message } from "../email/model/message.model";
 
+import Cryptr = require('cryptr');
+
 export class Database {
 
     config = new ConfigDatabase(database.development.host, database.development.user, database.development.password, database.development.database);
@@ -28,7 +30,7 @@ export class Database {
             //console.log('rows => ', rows)
             return  rows
         } catch (error) {
-            console.log("Erro na consulta : \n Code : %s \n Message : %s", error.ode, error.sqlMessage)
+            console.log("Erro na consulta : \n Code : %s \n Message : %s", error.code, error.sqlMessage)
             throw error
         } 
 
@@ -62,6 +64,25 @@ export class Database {
                 'SELECT * FROM `email_config` where `idemail_config` = ?',
                 //sql: 'SELECT * FROM `email` WHERE `sequenceNumber` = ? and `subject` = ? and `ds_email` = ? and `bodyEmail` = ?',
                 [id]
+            )
+            //console.log('rows => ', rows)
+            return  rows
+        } catch (error) {
+            console.log("Erro na consulta : \n Code : %s \n Message : %s", error.ode, error.sqlMessage)
+            throw error
+        }
+    }
+
+    async getMailConfigurationByEmail(email: string) {
+
+    
+
+        try {
+            //console.log(date.toISOString().slice(0, 19).replace('T', ' '))
+            const [rows, fields] = await this.connection.promise().query(
+                'SELECT * FROM `email_config` where `ds_email` = ?',
+                //sql: 'SELECT * FROM `email` WHERE `sequenceNumber` = ? and `subject` = ? and `ds_email` = ? and `bodyEmail` = ?',
+                [email]
             )
             //console.log('rows => ', rows)
             return  rows
