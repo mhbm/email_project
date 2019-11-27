@@ -40,7 +40,7 @@ Route: /read
     "configEmail": {
         "email": "mail",
         "password": "password",
-        "office365": true //True is mail for office365
+        "office365": true 
     }
 }
 
