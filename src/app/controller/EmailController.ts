@@ -15,6 +15,7 @@ import { TaskReadMail } from "../job/taskReadMail";
 import { CronJob } from "cron";
 
 import ExpressValidator = require('express-validator');
+import emojiStrip = require('emoji-strip')
 
 class EmailController {
   public sendMail(req: Request, res: Response) {
@@ -295,9 +296,15 @@ class EmailController {
           .each(async message => {
             if (message.data.length > 0) {
               try {
+
+                let ds_subject = message.headers.get("subject")
+                //Removendo aspas e apóstrofe
+       ds_subject = ds_subject.replace(/["|']/g, ' ')
+       //Removendo emoticon
+       ds_subject= emojiStrip(ds_subject)
                 const rows = await db.checkExistEmail(
                   message.headers.get("date"),
-                  message.headers.get("subject")
+                  ds_subject
                 );
 
                 if (rows.length > 0) {
@@ -308,7 +315,7 @@ class EmailController {
                   try {
                     const rowsInsert = await db.insertEmail(
                       message.sequenceNumber,
-                      message.headers.get("subject"),
+                      ds_subject,
                       email,
                       message.data[0].textAsHtml,
                       message.headers.get("from").text,

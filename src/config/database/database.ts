@@ -5,6 +5,9 @@ import { Message } from "../email/model/message.model";
 
 import Cryptr = require('cryptr');
 
+
+
+
 export class Database {
 
     config = new ConfigDatabase(database.development.host, database.development.user, database.development.password, database.development.database);
@@ -22,6 +25,8 @@ export class Database {
 
         try {
             //console.log(date.toISOString().slice(0, 19).replace('T', ' '))
+            
+            
             const [rows, fields] = await this.connection.promise().query(
                 'SELECT * FROM `email` where `dt_email` = ? and `ds_subject` = ?',
                 //sql: 'SELECT * FROM `email` WHERE `sequenceNumber` = ? and `subject` = ? and `ds_email` = ? and `bodyEmail` = ?',
@@ -30,7 +35,9 @@ export class Database {
             //console.log('rows => ', rows)
             return  rows
         } catch (error) {
+            
             console.log("Erro na consulta : \n Code : %s \n Message : %s", error.code, error.sqlMessage)
+            
             throw error
         } 
 
