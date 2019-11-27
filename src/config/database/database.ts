@@ -6,8 +6,6 @@ import { Message } from "../email/model/message.model";
 import Cryptr = require('cryptr');
 
 
-
-
 export class Database {
 
     config = new ConfigDatabase(database.development.host, database.development.user, database.development.password, database.development.database);
@@ -25,42 +23,42 @@ export class Database {
 
         try {
             //console.log(date.toISOString().slice(0, 19).replace('T', ' '))
-            
-            
+
+
             const [rows, fields] = await this.connection.promise().query(
                 'SELECT * FROM `email` where `dt_email` = ? and `ds_subject` = ?',
                 //sql: 'SELECT * FROM `email` WHERE `sequenceNumber` = ? and `subject` = ? and `ds_email` = ? and `bodyEmail` = ?',
                 [dt_email.toISOString().slice(0, 19).replace('T', ' '), ds_subject]
             )
             //console.log('rows => ', rows)
-            return  rows
+            return rows
         } catch (error) {
-            
+
             console.log("Erro na consulta : \n Code : %s \n Message : %s", error.code, error.sqlMessage)
-            
+
             throw error
-        } 
+        }
 
     }
 
-    async insertEmail(num_sequenceNumber: number, ds_subject:string, ds_email: string, ds_body: string, ds_from: string, dt_email: Date) {
+    async insertEmail(num_sequenceNumber: number, ds_subject: string, ds_email: string, ds_body: string, ds_from: string, dt_email: Date) {
 
         try {
 
-       
-         
 
-       const [rows, fields] = await this.connection.promise().query(
-        
-            'INSERT INTO email(num_sequenceNumber, ds_subject, ds_email, ds_body, ds_from, dt_email) values (?,?,?,?,?,?)',
-            [num_sequenceNumber, ds_subject, ds_email, ds_body, ds_from, dt_email.toISOString().slice(0, 19).replace('T', ' ')]
-        
-        )
-        console.log(rows)
-       } catch (error) {
-        console.log("Erro na consulta : \n Code : %s \n Message : %s", error.code, error.sqlMessage)
-        throw error
-       }
+
+
+            const [rows, fields] = await this.connection.promise().query(
+
+                'INSERT INTO email(num_sequenceNumber, ds_subject, ds_email, ds_body, ds_from, dt_email) values (?,?,?,?,?,?)',
+                [num_sequenceNumber, ds_subject, ds_email, ds_body, ds_from, dt_email.toISOString().slice(0, 19).replace('T', ' ')]
+
+            )
+            console.log(rows)
+        } catch (error) {
+            console.log("Erro na consulta : \n Code : %s \n Message : %s", error.code, error.sqlMessage)
+            throw error
+        }
 
     }
 
@@ -73,7 +71,7 @@ export class Database {
                 [id]
             )
             //console.log('rows => ', rows)
-            return  rows
+            return rows
         } catch (error) {
             console.log("Erro na consulta : \n Code : %s \n Message : %s", error.ode, error.sqlMessage)
             throw error
@@ -82,7 +80,7 @@ export class Database {
 
     async getMailConfigurationByEmail(email: string) {
 
-    
+
 
         try {
             //console.log(date.toISOString().slice(0, 19).replace('T', ' '))
@@ -92,7 +90,7 @@ export class Database {
                 [email]
             )
             //console.log('rows => ', rows)
-            return  rows
+            return rows
         } catch (error) {
             console.log("Erro na consulta : \n Code : %s \n Message : %s", error.ode, error.sqlMessage)
             throw error

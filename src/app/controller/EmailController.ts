@@ -19,12 +19,12 @@ import emojiStrip = require('emoji-strip')
 
 class EmailController {
   public sendMail(req: Request, res: Response) {
-    console.log('1')
+    
     const errors = ExpressValidator.validationResult(req)
     if (!errors.isEmpty()) {
       return res.status(422).json({ errors: errors.array() })
     }
-    console.log('2')
+    
     const body = req.body;
 
     //Passando os parametros para a criação do email
@@ -147,7 +147,7 @@ class EmailController {
                 .on("end", () => {
                   messages.push(message);
                 });
-            }).on("end", function() {
+            }).on("end", function () {
               resolve(messages);
             });
           });
@@ -288,7 +288,7 @@ class EmailController {
                   .on("end", () => {
                     messages.push(message);
                   });
-              }).on("end", function() {
+              }).on("end", function () {
                 resolve(messages);
               });
             });
@@ -299,9 +299,9 @@ class EmailController {
 
                 let ds_subject = message.headers.get("subject")
                 //Removendo aspas e apóstrofe
-       ds_subject = ds_subject.replace(/["|']/g, ' ')
-       //Removendo emoticon
-       ds_subject= emojiStrip(ds_subject)
+                ds_subject = ds_subject.replace(/["|']/g, ' ')
+                //Removendo emoticon
+                ds_subject = emojiStrip(ds_subject)
                 const rows = await db.checkExistEmail(
                   message.headers.get("date"),
                   ds_subject

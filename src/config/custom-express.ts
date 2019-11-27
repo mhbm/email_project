@@ -15,6 +15,8 @@ import ExpressValidator = require('express-validator');
 
 import { EmailValidation } from '../app/validation/EmailValidation'
 
+import {Routers} from './Routes'
+
 class App {
   public express: express.Application;
 
@@ -62,23 +64,10 @@ class App {
   }
 
   private routes(): void {
-    //this.express.get("/", this.emailController.sendMail);
-    this.express.get("/", EmailValidation.sendMailValidation(),
-      this.emailController.sendMail);
 
-    this.express.get("/read", this.emailController.readMailBox);
-    this.express.get("/readJob", this.emailController.jobMailBox);
-    this.express.get('/generate', (req, res) => {
-      const password = req.body.password
-
-      const cryptr = new Cryptr('helpper');
-      let encryptdPassword = cryptr.encrypt(password);
-      console.log(encryptdPassword)
-      res.status(201).send(encryptdPassword)
-
-
-
-    })
+    let routers = new Routers(this.express)
+    routers.routers()
+    
   }
 }
 export default new App().express; 
