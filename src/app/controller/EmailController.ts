@@ -14,8 +14,17 @@ import { Database } from "../../config/database/database";
 import { TaskReadMail } from "../job/taskReadMail";
 import { CronJob } from "cron";
 
+import ExpressValidator = require('express-validator');
+import emojiStrip = require('emoji-strip')
+
 class EmailController {
   public sendMail(req: Request, res: Response) {
+    console.log('1')
+    const errors = ExpressValidator.validationResult(req)
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() })
+    }
+    console.log('2')
     const body = req.body;
 
     //Passando os parametros para a criação do email
@@ -287,9 +296,15 @@ class EmailController {
           .each(async message => {
             if (message.data.length > 0) {
               try {
+
+                let ds_subject = message.headers.get("subject")
+                //Removendo aspas e apóstrofe
+       ds_subject = ds_subject.replace(/["|']/g, ' ')
+       //Removendo emoticon
+       ds_subject= emojiStrip(ds_subject)
                 const rows = await db.checkExistEmail(
                   message.headers.get("date"),
-                  message.headers.get("subject")
+                  ds_subject
                 );
 
                 if (rows.length > 0) {
@@ -300,7 +315,7 @@ class EmailController {
                   try {
                     const rowsInsert = await db.insertEmail(
                       message.sequenceNumber,
-                      message.headers.get("subject"),
+                      ds_subject,
                       email,
                       message.data[0].textAsHtml,
                       message.headers.get("from").text,
