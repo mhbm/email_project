@@ -14,8 +14,16 @@ import { Database } from "../../config/database/database";
 import { TaskReadMail } from "../job/taskReadMail";
 import { CronJob } from "cron";
 
+import ExpressValidator = require('express-validator');
+
 class EmailController {
   public sendMail(req: Request, res: Response) {
+    console.log('1')
+    const errors = ExpressValidator.validationResult(req)
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() })
+    }
+    console.log('2')
     const body = req.body;
 
     //Passando os parametros para a criação do email

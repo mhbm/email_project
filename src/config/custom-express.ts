@@ -10,6 +10,11 @@ import * as CryptoJS from "crypto-js";
 
 import Cryptr = require("cryptr");
 
+const { check, validationResult } = require('express-validator');
+import ExpressValidator = require('express-validator');
+
+import {EmailValidation} from '../app/validation/EmailValidation'
+
 class App {
   public express: express.Application;
 
@@ -57,9 +62,12 @@ class App {
   }
 
   private routes(): void {
-    this.express.get("/", this.emailController.sendMail);
+    //this.express.get("/", this.emailController.sendMail);
+    this.express.get("/", EmailValidation.sendMailValidation(),
+    this.emailController.sendMail);
+
     this.express.get("/read", this.emailController.readMailBox);
     this.express.get("/readJob", this.emailController.jobMailBox);
   }
-}
-export default new App().express;
+} 
+export default new App().express; 
