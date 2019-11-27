@@ -1,6 +1,6 @@
-import { Router } from "express";
 import EmailController from "../app/controller/emailController";
 import { EmailValidation } from '../app/validation/EmailValidation'
+
 import Cryptr = require("cryptr");
 import { Express } from 'express'
 
@@ -26,7 +26,6 @@ export class Routers {
             res.status(201).send(encryptdPassword)
 
         })
-        this.express.get('/jobListernerMailBox', this.emailController.jobListernerMailBox)
     }
 
 }

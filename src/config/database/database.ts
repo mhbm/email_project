@@ -1,10 +1,4 @@
-
 import { ConfigDatabase, database } from "../../config/database/config.model";
-
-import { Message } from "../email/model/message.model";
-
-import Cryptr = require('cryptr');
-
 
 export class Database {
 
@@ -45,9 +39,6 @@ export class Database {
 
         try {
 
-
-
-
             const [rows, fields] = await this.connection.promise().query(
 
                 'INSERT INTO email(num_sequenceNumber, ds_subject, ds_email, ds_body, ds_from, dt_email) values (?,?,?,?,?,?)',
@@ -79,8 +70,6 @@ export class Database {
     }
 
     async getMailConfigurationByEmail(email: string) {
-
-
 
         try {
             //console.log(date.toISOString().slice(0, 19).replace('T', ' '))
