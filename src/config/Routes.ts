@@ -1,8 +1,7 @@
 import EmailController from "../app/controller/emailController";
 import { EmailValidation } from "../app/validation/EmailValidation";
-
-import Cryptr = require("cryptr");
 import { Express } from "express";
+import { CryptData } from '../app/controller/CryptData'
 
 export class Routers {
   emailController = EmailController;
@@ -10,7 +9,7 @@ export class Routers {
   constructor(private express: Express) { }
 
   public routers() {
-    //this.express.get("/", this.emailController.sendMail);
+    
     this.express.get(
       "/sendMail",
       EmailValidation.sendMailValidation(),
@@ -21,11 +20,8 @@ export class Routers {
     this.express.get("/readJob", this.emailController.jobMailBox);
     this.express.get("/generate", (req, res) => {
       const password = req.body.password;
-
-      const cryptr = new Cryptr("helpper");
-      let encryptdPassword = cryptr.encrypt(password);
-      console.log(encryptdPassword);
-      res.status(201).send(encryptdPassword);
+      const cryptData = new CryptData()
+      res.status(201).send(cryptData.encryptData(password));
     });
 
     this.express.route('/management/mail')
@@ -40,8 +36,13 @@ export class Routers {
       })
 
     this.express.get('/mail/historic', (req, res) => {
-        console.log("Histórico do email")
-        res.send("Histórico do email - Precisa desenvolver")
+      console.log("Histórico do email")
+      res.send("Histórico do email - Precisa desenvolver")
     })
+
+    // Route not found
+    this.express.use(function (req, res, next) {
+      return res.status(404).send({ message: 'Route' + req.url + ' Not found.' });
+    });
   }
 }
