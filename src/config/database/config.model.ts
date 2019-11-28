@@ -20,24 +20,6 @@ export class ConfigDatabase {
     });
   }
 
-  connection() {
-    const con = this.createConnection();
-    con.connect((error: any) => {
-      if (error) {
-        console.log(
-          "Erro na conexão com o banco de dados : \n Code : %s \n Message: %s ",
-          error.code,
-          error.sqlMessage
-        );
-      } else {
-        con.query("SELECT 1 + 1 AS solution", function(error, results, fields) {
-          if (error) throw error;
-          console.log("The solution is: ", results[0].solution);
-        });
-        con.end();
-      }
-    });
-  }
 }
 
 //Configuração do banco mysql
