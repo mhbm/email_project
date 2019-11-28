@@ -46,7 +46,7 @@ export const database = {
   development: {
     host: "127.0.0.1",
     user: "root",
-    password: "",
+    password: "root",
     database: "email_project"
   },
   production: {

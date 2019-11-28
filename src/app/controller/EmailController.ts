@@ -165,6 +165,12 @@ class EmailController {
               } else {
                 console.log("Não encontrado no banco");
 
+                if (message.headers.get('in-reply-to')) {
+                  console.log("é resposta")
+                } else {
+                  console.log("não é resposta")
+                }
+                
                 try {
                   const rowsInsert = await db.insertEmail(
                     message.sequenceNumber,
@@ -172,7 +178,9 @@ class EmailController {
                     body.configEmail.email,
                     message.data[0].textAsHtml,
                     message.headers.get("from").text,
-                    message.headers.get("date")
+                    message.headers.get("date"),
+                    message.headers.get('message-id'),
+                    message.headers.get('in-reply-to')
                   );
                   console.log("Inserido", rowsInsert);
                 } catch (e) {
@@ -190,7 +198,7 @@ class EmailController {
           }
         })
         .then(() => {
-          console.log("Finalizado2");
+          console.log("Finalizado");
           imapServer.end();
         })
         .catch(err => {
@@ -319,7 +327,9 @@ class EmailController {
                       email,
                       message.data[0].textAsHtml,
                       message.headers.get("from").text,
-                      message.headers.get("date")
+                      message.headers.get("date"),
+                      message.headers.get('message-id'),
+                      message.headers.get('in-reply-to')
                     );
                     console.log("Inserido", rowsInsert);
                   } catch (e) {
@@ -342,6 +352,7 @@ class EmailController {
           })
           .catch(err => {
             console.log("A error has occured: ", err);
+            reject(err);
           });
       });
 
