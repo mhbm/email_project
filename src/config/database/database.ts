@@ -40,9 +40,51 @@ export class Database {
                 'SELECT * FROM `email` where `ds_message_id` = ?',
                 [ds_message_id]
             )
-            
+
             return rows
-        }  catch (error) {
+        } catch (error) {
+            console.log("Erro na consulta : \n Code : %s \n Message : %s", error.code, error.sqlMessage)
+            throw error
+        }
+    }
+
+    async deleteMailConfig(id: number) {
+
+        try {
+            const [rows, fields] = await this.connection.promise().query(
+                'DELETE FROM email_config where email_config_id = ?',
+                [id]
+            )
+            return rows
+        } catch (error) {
+            console.log("Erro na consulta : \n Code : %s \n Message : %s", error.code, error.sqlMessage)
+            throw error
+        }
+    }
+
+    async updateMailConfig(ds_email: string, ds_password: string, flg_office365: string, id: number) {
+
+        try {
+            const [rows, fields] = await this.connection.promise().query(
+                'UPDATE email_config set ds_email = ? , ds_password = ? , flg_office365 = ? where email_config_id = ?',
+                [ds_email, ds_password, flg_office365, id]
+            )
+            return rows
+        } catch (error) {
+            console.log("Erro na consulta : \n Code : %s \n Message : %s", error.code, error.sqlMessage)
+            throw error
+        }
+    }
+
+    async insertMailConfig(ds_email: string, ds_password: string, flg_office365: string) {
+
+        try {
+            const [rows, fields] = await this.connection.promise().query(
+                'INSERT INTO email_config(ds_email, ds_password,flg_office365) values (?,?,?)',
+                [ds_email, ds_password, flg_office365]
+            )
+            return rows
+        } catch (error) {
             console.log("Erro na consulta : \n Code : %s \n Message : %s", error.code, error.sqlMessage)
             throw error
         }
@@ -50,7 +92,7 @@ export class Database {
 
     async insertEmail(num_sequenceNumber: number, ds_subject: string, ds_email: string, ds_body: string, ds_from: string, dt_email: Date, ds_message_id: string, ds_message_id_parent: string) {
 
-        try { 
+        try {
 
             const [rows, fields] = await this.connection.promise().query(
 

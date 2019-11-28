@@ -3,8 +3,11 @@ import { EmailValidation } from "../app/validation/EmailValidation";
 import { Express } from "express";
 import { CryptData } from '../app/controller/CryptData'
 
+import EmailManagementController from "../app/controller/EmailManagementController"
+
 export class Routers {
   emailController = EmailController;
+  emailManagementController = EmailManagementController;
 
   constructor(private express: Express) { }
 
@@ -25,15 +28,9 @@ export class Routers {
     });
 
     this.express.route('/management/mail')
-      .post((req, res) => {
-        res.send("INSERIR MAIL - Precisa desenvolver")
-      })
-      .delete((req, res) => {
-        res.send("DELETAR MAIL - Precisa desenvolver")
-      })
-      .put((req, res) => {
-        res.send("Atualizar mail - Precisa desenvoler")
-      })
+      .post(this.emailManagementController.insertMailConfig)
+      .delete(this.emailManagementController.deleteMailConfig)
+      .put(this.emailManagementController.updateMailConfig)
 
     this.express.get('/mail/historic', (req, res) => {
       console.log("Histórico do email")
