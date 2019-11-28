@@ -77,11 +77,25 @@ class EmailController {
     });
 
     //Enviando o Email
-    transportEmail.sendMail(message.messageJSON(), (error, info) => {
+    transportEmail.sendMail(message.messageJSON(), async (error, info) => {
       if (error) {
         console.log("Erro ao enviar a mensagem", error);
         return res.status(401).json(error);
       }
+      //Salvar no banco
+      
+      let db = new Database();
+      const rowsInsert = await db.insertEmail(
+        null,
+        body.configMessage.subject,
+        body.configEmail.email,
+        body.configMessage.text,
+        body.configMessage.from,
+        new Date(),
+        info.messageId,
+        null
+      );
+        
       return res.status(200).json(info);
     });
   }
@@ -421,6 +435,9 @@ class EmailController {
       });
     }
   }
+
+
+  
 }
 
 export default new EmailController();

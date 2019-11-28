@@ -1,8 +1,7 @@
 import EmailController from "../app/controller/emailController";
 import { EmailValidation } from "../app/validation/EmailValidation";
-
-import Cryptr = require("cryptr");
 import { Express } from "express";
+import {CryptData} from '../app/controller/CryptData'
 
 export class Routers {
   emailController = EmailController;
@@ -21,11 +20,9 @@ export class Routers {
     this.express.get("/readJob", this.emailController.jobMailBox);
     this.express.get("/generate", (req, res) => {
       const password = req.body.password;
+      const cryptData = new CryptData()
 
-      const cryptr = new Cryptr("helpper");
-      let encryptdPassword = cryptr.encrypt(password);
-      console.log(encryptdPassword);
-      res.status(201).send(encryptdPassword);
+      res.status(201).send(cryptData.encryptData(password));
     });
 
     this.express.route('/management/mail')
