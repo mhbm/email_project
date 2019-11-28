@@ -17,7 +17,7 @@ export class Routers {
       this.emailController.sendMail
     );
 
-    this.express.get("/read", this.emailController.readMailBox);
+    this.express.get("/readMailBox", this.emailController.readMailBox);
     this.express.get("/readJob", this.emailController.jobMailBox);
     this.express.get("/generate", (req, res) => {
       const password = req.body.password;
