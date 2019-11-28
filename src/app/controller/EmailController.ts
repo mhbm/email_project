@@ -18,13 +18,39 @@ import ExpressValidator = require('express-validator');
 import emojiStrip = require('emoji-strip')
 
 class EmailController {
+
+  /**
+   * sendMail
+   *
+   * Responsável por enviar o email
+   * O padrão do request é :
+   *      {
+   *      "configEmail": {
+   *            "email": string,
+   *            "password": string, 
+   *         }
+   *      "configMessage": {
+   *          "from": "email do remetente",
+   *          "to": "email destinatario",
+   *          "subject": "assunto do email",
+   *          "text": "Body do email"
+   *      }
+   *
+   * @public
+   * @author Mateus Macedo
+   * @param  {express.Request} req the express request object
+   * @param  {express.Response} res the express response object
+   * @return {void}
+   */
+
   public sendMail(req: Request, res: Response) {
-    
+
+    //Verificação para ver se tem erro no request
     const errors = ExpressValidator.validationResult(req)
     if (!errors.isEmpty()) {
       return res.status(422).json({ errors: errors.array() })
     }
-    
+
     const body = req.body;
 
     //Passando os parametros para a criação do email
@@ -38,8 +64,9 @@ class EmailController {
       body.configMessage.text
     );
 
+    //Criando o transport com o valor HOTMAIL "chumbado"
     let transportEmail = nodemailer.createTransport({
-      service: "Gmail",
+      service: "Hotmail", //https://nodemailer.com/smtp/well-known/
       auth: {
         user: email.user,
         pass: email.password
@@ -49,8 +76,7 @@ class EmailController {
       }
     });
 
-    console.log(message.messageJSON());
-
+    //Enviando o Email
     transportEmail.sendMail(message.messageJSON(), (error, info) => {
       if (error) {
         console.log("Erro ao enviar a mensagem", error);
@@ -172,7 +198,9 @@ class EmailController {
                     body.configEmail.email,
                     message.data[0].textAsHtml,
                     message.headers.get("from").text,
-                    message.headers.get("date")
+                    message.headers.get("date"),
+                    message.headers.get('message-id'),
+                    message.headers.get('in-reply-to')
                   );
                   console.log("Inserido", rowsInsert);
                 } catch (e) {
@@ -190,7 +218,7 @@ class EmailController {
           }
         })
         .then(() => {
-          console.log("Finalizado2");
+          console.log("Finalizado");
           imapServer.end();
         })
         .catch(err => {
@@ -319,7 +347,9 @@ class EmailController {
                       email,
                       message.data[0].textAsHtml,
                       message.headers.get("from").text,
-                      message.headers.get("date")
+                      message.headers.get("date"),
+                      message.headers.get('message-id'),
+                      message.headers.get('in-reply-to')
                     );
                     console.log("Inserido", rowsInsert);
                   } catch (e) {
@@ -342,6 +372,7 @@ class EmailController {
           })
           .catch(err => {
             console.log("A error has occured: ", err);
+            reject(err);
           });
       });
 

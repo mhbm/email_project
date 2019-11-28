@@ -35,14 +35,28 @@ export class Database {
 
     }
 
-    async insertEmail(num_sequenceNumber: number, ds_subject: string, ds_email: string, ds_body: string, ds_from: string, dt_email: Date) {
-
+    async checkMessageId(ds_message_id) {
         try {
+            const [rows, fields] = await this.connection.promise().query(
+                'SELECT * FROM `email` where `ds_message_id` = ?',
+                [ds_message_id]
+            )
+            
+            return rows
+        }  catch (error) {
+            console.log("Erro na consulta : \n Code : %s \n Message : %s", error.code, error.sqlMessage)
+            throw error
+        }
+    }
+
+    async insertEmail(num_sequenceNumber: number, ds_subject: string, ds_email: string, ds_body: string, ds_from: string, dt_email: Date, ds_message_id: string, ds_message_id_parent: string) {
+
+        try { 
 
             const [rows, fields] = await this.connection.promise().query(
 
-                'INSERT INTO email(num_sequenceNumber, ds_subject, ds_email, ds_body, ds_from, dt_email) values (?,?,?,?,?,?)',
-                [num_sequenceNumber, ds_subject, ds_email, ds_body, ds_from, dt_email.toISOString().slice(0, 19).replace('T', ' ')]
+                'INSERT INTO email(num_sequenceNumber, ds_subject, ds_email, ds_body, ds_from, dt_email, ds_message_id, ds_message_id_parent) values (?,?,?,?,?,?, ?, ?)',
+                [num_sequenceNumber, ds_subject, ds_email, ds_body, ds_from, dt_email.toISOString().slice(0, 19).replace('T', ' '), ds_message_id, ds_message_id_parent]
 
             )
             console.log(rows)

@@ -1,6 +1,15 @@
 import ExpressValidator = require('express-validator');
 
+/**
+ * @author Mateus Macedo
+ * @since  11/2019
+ */
+
 export class EmailValidation {
+
+    /*
+    *  Função responsável pela validações dos campos do request da rota /sendMail 
+    */
 
     public static sendMailValidation() {
         return [
@@ -14,8 +23,5 @@ export class EmailValidation {
             ExpressValidator.check('configMessage.text', 'O campo text é obrigatório').not().isEmpty()
         ]
     }
-
-
-
 
 }
