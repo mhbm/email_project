@@ -18,7 +18,6 @@ export class Database {
         try {
             //console.log(date.toISOString().slice(0, 19).replace('T', ' '))
 
-
             const [rows, fields] = await this.connection.promise().query(
                 'SELECT * FROM `email` where `dt_email` = ? and `ds_subject` = ?',
                 //sql: 'SELECT * FROM `email` WHERE `sequenceNumber` = ? and `subject` = ? and `ds_email` = ? and `bodyEmail` = ?',

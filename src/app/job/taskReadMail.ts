@@ -1,8 +1,4 @@
-import { CronJob } from "cron";
-import EmailController from "../controller/EmailController";
-
 import { Database } from "../../config/database/database";
-
 import Cryptr = require("cryptr");
 
 export class TaskReadMail {
@@ -52,12 +48,4 @@ export class TaskReadMail {
     }
   }
 
-  readMail() {
-    ///Executar 5 segundos
-    const job = new CronJob("*/10 * * * * *", () => {
-      //EmailController.readMailBoxJob(this.mail, this.password, this.office365);
-    });
-
-    job.start();
-  }
 }
