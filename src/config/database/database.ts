@@ -11,7 +11,7 @@ export class Database {
     }
 
     //checkExistEmail(sequenceNumber: number, subject: string, email: string, bodyEmail: string) : boolean {
-    async checkExistEmail(dt_email: Date, ds_subject: string) {
+    async checkExistEmail(dt_email: Date, desc_subject: string) {
 
         let check = false;
 
@@ -19,9 +19,9 @@ export class Database {
             //console.log(date.toISOString().slice(0, 19).replace('T', ' '))
 
             const [rows, fields] = await this.connection.promise().query(
-                'SELECT * FROM `email` where `dt_email` = ? and `ds_subject` = ?',
+                'SELECT * FROM `email` where `dt_email` = ? and `desc_subject` = ?',
                 //sql: 'SELECT * FROM `email` WHERE `sequenceNumber` = ? and `subject` = ? and `ds_email` = ? and `bodyEmail` = ?',
-                [dt_email.toISOString().slice(0, 19).replace('T', ' '), ds_subject]
+                [dt_email.toISOString().slice(0, 19).replace('T', ' '), desc_subject]
             )
             //console.log('rows => ', rows)
             return rows
@@ -34,13 +34,12 @@ export class Database {
 
     }
 
-    async checkMessageId(ds_message_id) {
+    async checkMessageId(desc_message_id) {
         try {
             const [rows, fields] = await this.connection.promise().query(
-                'SELECT * FROM `email` where `ds_message_id` = ?',
-                [ds_message_id]
+                'SELECT * FROM `email` where `desc_message_id` = ?',
+                [desc_message_id]
             )
-
             return rows
         } catch (error) {
             console.log("Erro na consulta : \n Code : %s \n Message : %s", error.code, error.sqlMessage)
@@ -90,15 +89,13 @@ export class Database {
         }
     }
 
-    async insertEmail(num_sequenceNumber: number, ds_subject: string, ds_email: string, ds_body: string, ds_from: string, dt_email: Date, ds_message_id: string, ds_message_id_parent: string) {
+    async insertEmail(num_sequenceNumber: number, desc_subject: string , email_config_id : number, desc_body: string, desc_from: string, desc_to: string, dt_email: Date, desc_message_id: string, desc_message_id_parent: string) {
 
         try {
 
             const [rows, fields] = await this.connection.promise().query(
-
-                'INSERT INTO email(num_sequenceNumber, ds_subject, ds_email, ds_body, ds_from, dt_email, ds_message_id, ds_message_id_parent) values (?,?,?,?,?,?, ?, ?)',
-                [num_sequenceNumber, ds_subject, ds_email, ds_body, ds_from, dt_email.toISOString().slice(0, 19).replace('T', ' '), ds_message_id, ds_message_id_parent]
-
+                'INSERT INTO email(num_sequenceNumber, desc_subject, email_config_id, desc_body, desc_from, desc_to, dt_email, desc_message_id, desc_message_id_parent) values (?,?,?,?,?,?,?,?,?)',
+                [num_sequenceNumber, desc_subject, email_config_id, desc_body, desc_from, desc_to, dt_email.toISOString().slice(0, 19).replace('T', ' '), desc_message_id, desc_message_id_parent]
             )
             console.log(rows)
         } catch (error) {

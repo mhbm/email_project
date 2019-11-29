@@ -43,7 +43,7 @@ class EmailController {
    * @return {void}
    */
 
-  public sendMail(req: Request, res: Response) {
+  public async sendMail(req: Request, res: Response) {
 
     //Verificação para ver se tem erro no request
     const errors = ExpressValidator.validationResult(req)
@@ -53,54 +53,67 @@ class EmailController {
 
     const body = req.body;
 
-    //Passando os parametros para a criação do email
-    const email = new Email(body.configEmail.email, body.configEmail.password);
-
-    //Passando os parametros para a criação da mensagem a ser enviada
-    const message = new Message(
-      body.configMessage.from,
-      body.configMessage.to,
-      body.configMessage.subject,
-      body.configMessage.text
+    let mailConfig = await TaskReadMail.getMailConfigurationByEmail(
+      body.configEmail.email
     );
 
-    //Criando o transport com o valor HOTMAIL "chumbado"
-    let transportEmail = nodemailer.createTransport({
-      service: "Hotmail", //https://nodemailer.com/smtp/well-known/
-      auth: {
-        user: email.user,
-        pass: email.password
-      },
-      tls: {
-        rejectUnauthorized: false
-      }
-    });
+    if (mailConfig != null) {
 
-    //Enviando o Email
-    transportEmail.sendMail(message.messageJSON(), async (error, info) => {
-      if (error) {
-        console.log("Erro ao enviar a mensagem", error);
-        return res.status(401).json(error);
-      }
+      //Passando os parametros para a criação do email
+      const email = new Email(body.configEmail.email, mailConfig.password);
 
-      let db = new Database();
-      try {
-        const rowsInsert = await db.insertEmail(
-          null,
-          body.configMessage.subject,
-          body.configEmail.email,
-          body.configMessage.text,
-          body.configMessage.from,
-          new Date(),
-          info.messageId,
-          null
-        );
-      } catch (e) {
-        console.log("Aconteceu erro: ", e)
-      }
+      //Passando os parametros para a criação da mensagem a ser enviada
+      const message = new Message(
+        body.configMessage.from,
+        body.configMessage.to,
+        body.configMessage.subject,
+        body.configMessage.text
+      );
 
-      return res.status(200).json(info);
-    });
+      //Criando o transport com o valor HOTMAIL "chumbado"
+      let transportEmail = nodemailer.createTransport({
+        service: "Hotmail", //https://nodemailer.com/smtp/well-known/
+        auth: {
+          user: email.user,
+          pass: email.password
+        },
+        tls: {
+          rejectUnauthorized: false
+        }
+      });
+
+      //Enviando o Email
+      transportEmail.sendMail(message.messageJSON(), async (error, info) => {
+        if (error) {
+          console.log("Erro ao enviar a mensagem", error);
+          return res.status(401).json(error);
+        }
+
+        let db = new Database();
+        try {
+          const rowsInsert = await db.insertEmail(
+            null,
+            body.configMessage.subject,
+            mailConfig.email_config_id,
+            body.configMessage.text,
+            body.configMessage.from,
+            body.configMessage.to,
+            new Date(),
+            info.messageId,
+            null
+          );
+        } catch (e) {
+          console.log("Aconteceu erro: ", e)
+          throw e
+        }
+
+        return res.status(200).json(info);
+      });
+
+    } else {
+      console.log(`O email ${body.configEmail.email} informado não existe no banco`)
+      res.status(401).send({ message: `O email ${body.configEmail.email} informado não existe no banco` })
+    }
   }
 
   /**
@@ -123,7 +136,7 @@ class EmailController {
    * @return {void}
    */
 
-  public readMailBox(req: Request, res: Response) {
+  public async readMailBox(req: Request, res: Response) {
     const body = req.body;
 
     let errorReturn = {};
@@ -140,6 +153,12 @@ class EmailController {
     } else {
       configuration.configurationGmail();
     }
+
+    let mailConfig = await TaskReadMail.getMailConfigurationByEmail(
+      body.configEmail.email
+    );
+
+    if (mailConfig != null) {
 
     const imapServer = configuration.createImap();
 
@@ -212,9 +231,10 @@ class EmailController {
                   const rowsInsert = await db.insertEmail(
                     message.sequenceNumber,
                     message.headers.get("subject"),
-                    body.configEmail.email,
+                    mailConfig.email_config_id,
                     message.data[0].textAsHtml,
                     message.headers.get("from").text,
+                    message.headers.get("to").text,
                     message.headers.get("date"),
                     message.headers.get('message-id'),
                     message.headers.get('in-reply-to')
@@ -263,14 +283,18 @@ class EmailController {
     });
 
     imapServer.connect();
-  }
+  } else {
+    console.log(`O email ${body.configEmail.email} informado não existe no banco`)
+      res.status(401).send({ message: `O email ${body.configEmail.email} informado não existe no banco` })
+    }
+    }
 
   public static async readMailBoxJob(
     email: string,
     password: string,
     office365: boolean
   ) {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       let errorsReturn = {};
 
       let db = new Database();
@@ -283,6 +307,11 @@ class EmailController {
         configuration.configurationGmail();
       }
 
+      let mailConfig = await TaskReadMail.getMailConfigurationByEmail(
+        email
+      );
+  
+      if (mailConfig != null) {
       const imapServer = configuration.createImap();
 
       //Promisifying IMAP
@@ -361,9 +390,10 @@ class EmailController {
                     const rowsInsert = await db.insertEmail(
                       message.sequenceNumber,
                       ds_subject,
-                      email,
+                      mailConfig.email_config_id,
                       message.data[0].textAsHtml,
                       message.headers.get("from").text,
+                      message.headers.get("to").text,
                       message.headers.get("date"),
                       message.headers.get('message-id'),
                       message.headers.get('in-reply-to')
@@ -404,6 +434,12 @@ class EmailController {
       });
 
       imapServer.connect();
+
+    } else {
+      console.log(`O email ${email} informado não existe no banco`)
+      reject({ message: `O email ${email} informado não existe no banco` })
+    
+    }
     });
   }
 
