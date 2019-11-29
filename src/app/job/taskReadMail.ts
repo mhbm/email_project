@@ -16,10 +16,10 @@ export class TaskReadMail {
       console.log("registro encontrado");
 
       return {
-        email: row[0].ds_email,
-        password: row[0].ds_password,
+        email: row[0].desc_email,
+        password: row[0].hash_password,
         //password: CryptoJS.SHA256(row[0].ds_password).toString(),
-        office365: row[0].flg_office365 == "OFFICE365"
+        office365: row[0].desc_provider == "OFFICE365"
       };
     } else {
       console.log("registro nao encontrado");
@@ -37,10 +37,10 @@ export class TaskReadMail {
       console.log("registro encontrado");
 
       return {
-        email: row[0].ds_email,
-        password: cryptr.decrypt(row[0].ds_password),
+        email: row[0].desc_email,
+        password: cryptr.decrypt(row[0].hash_password),
         //password: CryptoJS.SHA256(row[0].ds_password).toString(),
-        office365: row[0].flg_office365 == "OFFICE365",
+        office365: row[0].desc_provider == "OFFICE365",
         email_config_id : row[0].email_config_id
       };
     } else {

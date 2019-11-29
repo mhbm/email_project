@@ -62,12 +62,12 @@ export class Database {
         }
     }
 
-    async updateMailConfig(ds_email: string, ds_password: string, flg_office365: string, id: number) {
+    async updateMailConfig(desc_email: string, hash_password: string, desc_provider: string, id: number) {
 
         try {
             const [rows, fields] = await this.connection.promise().query(
-                'UPDATE email_config set ds_email = ? , ds_password = ? , flg_office365 = ? where email_config_id = ?',
-                [ds_email, ds_password, flg_office365, id]
+                'UPDATE email_config set desc_email = ? , hash_password = ? , desc_provider = ? where email_config_id = ?',
+                [desc_email, hash_password, desc_provider, id]
             )
             return rows
         } catch (error) {
@@ -76,12 +76,12 @@ export class Database {
         }
     }
 
-    async insertMailConfig(ds_email: string, ds_password: string, flg_office365: string) {
+    async insertMailConfig(desc_email: string, hash_password: string, desc_provider: string) {
 
-        try {
+        try {   
             const [rows, fields] = await this.connection.promise().query(
-                'INSERT INTO email_config(ds_email, ds_password,flg_office365) values (?,?,?)',
-                [ds_email, ds_password, flg_office365]
+                'INSERT INTO email_config(desc_email, hash_password,desc_provider) values (?,?,?)',
+                [desc_email, hash_password, desc_provider]
             )
             return rows
         } catch (error) {
@@ -112,7 +112,7 @@ export class Database {
         try {
             //console.log(date.toISOString().slice(0, 19).replace('T', ' '))
             const [rows, fields] = await this.connection.promise().query(
-                'SELECT * FROM `email_config` where `idemail_config` = ?',
+                'SELECT * FROM `email_config` where `email_config_id` = ?',
                 //sql: 'SELECT * FROM `email` WHERE `sequenceNumber` = ? and `subject` = ? and `ds_email` = ? and `bodyEmail` = ?',
                 [id]
             )
@@ -129,7 +129,7 @@ export class Database {
         try {
             //console.log(date.toISOString().slice(0, 19).replace('T', ' '))
             const [rows, fields] = await this.connection.promise().query(
-                'SELECT * FROM `email_config` where `ds_email` = ?',
+                'SELECT * FROM `email_config` where `desc_email` = ?',
                 //sql: 'SELECT * FROM `email` WHERE `sequenceNumber` = ? and `subject` = ? and `ds_email` = ? and `bodyEmail` = ?',
                 [email]
             )

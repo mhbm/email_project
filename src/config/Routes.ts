@@ -12,7 +12,7 @@ export class Routers {
   constructor(private express: Express) { }
 
   public routers() {
-    
+
     this.express.get(
       "/sendMail",
       EmailValidation.sendMailValidation(),
