@@ -13,10 +13,12 @@
     "imap": "^0.8.19",
     "mailparser": "^2.7.6",
     "mysql2": "^2.0.1",
+    "nodejs-base64": "^1.0.3",
     "nodemailer": "^6.3.1",
-    "nodemon": "^1.19.4"
+    "util": "^0.12.1"
   },
   "devDependencies": {
-    "@types/node": "^12.12.11"
+    "@types/node": "^12.12.11",
+    "nodemon": "^1.19.4"
   }
 }

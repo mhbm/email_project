@@ -19,7 +19,6 @@ export class ConfigDatabase {
       queueLimit: 0
     });
   }
-
 }
 
 //Configuração do banco mysql
@@ -28,7 +27,7 @@ export const database = {
   development: {
     host: "127.0.0.1",
     user: "root",
-    password: "root",
+    password: "",
     database: "email_project"
   },
   production: {

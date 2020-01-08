@@ -14,8 +14,8 @@ export class imapConfig {
   constructor(public user: string, public password: string) {}
 
   /*
-  * Função para configurar pos valores para o Gmail
-  */
+   * Função para configurar pos valores para o Gmail
+   */
 
   configurationGmail() {
     this.host = "imap.gmail.com";
@@ -24,8 +24,8 @@ export class imapConfig {
   }
 
   /*
-  * Função para configurar pos valores para o Office365
-  */
+   * Função para configurar pos valores para o Office365
+   */
 
   configurationOffice365() {
     this.host = "outlook.office365.com";
@@ -33,10 +33,9 @@ export class imapConfig {
     this.tls = true;
   }
 
-
   /*
-  * Função para criar o IMAP configurado e retorná-lo
-  */
+   * Função para criar o IMAP configurado e retorná-lo
+   */
 
   createImap() {
     return new Imap({
@@ -45,8 +44,11 @@ export class imapConfig {
       host: this.host,
       port: this.port,
       tls: this.tls,
-      tlsOptions: { rejectUnauthorized: false } //,
+      tlsOptions: { rejectUnauthorized: false }, //,
       //debug: console.log
+      mailParserOptions: { streamAttachments: true }, // options to be passed to mailParser lib.
+      attachments: true, // download attachments as they are encountered to the project directory
+      attachmentOptions: { directory: "attachments/" } // specify a download directory for attachments
     });
   }
 }

@@ -14,11 +14,14 @@ import { Database } from "../../config/database/database";
 import { TaskReadMail } from "../job/taskReadMail";
 import { CronJob } from "cron";
 
-import ExpressValidator = require('express-validator');
-import emojiStrip = require('emoji-strip')
+import ExpressValidator = require("express-validator");
+import emojiStrip = require("emoji-strip");
+
+const { base64encode, base64decode } = require("nodejs-base64");
+const fs = require("fs");
+import { inspect } from "util";
 
 class EmailController {
-
   /**
    * sendMail
    *
@@ -27,7 +30,7 @@ class EmailController {
    *      {
    *      "configEmail": {
    *            "email": string,
-   *            "password": string, 
+   *            "password": string,
    *         }
    *      "configMessage": {
    *          "from": "email do remetente",
@@ -44,11 +47,10 @@ class EmailController {
    */
 
   public sendMail(req: Request, res: Response) {
-
     //Verificação para ver se tem erro no request
-    const errors = ExpressValidator.validationResult(req)
+    const errors = ExpressValidator.validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(422).json({ errors: errors.array() })
+      return res.status(422).json({ errors: errors.array() });
     }
 
     const body = req.body;
@@ -96,7 +98,7 @@ class EmailController {
           null
         );
       } catch (e) {
-        console.log("Aconteceu erro: ", e)
+        console.log("Aconteceu erro: ", e);
       }
 
       return res.status(200).json(info);
@@ -187,10 +189,14 @@ class EmailController {
                 .on("body", (stream, info) => {
                   stream.pipe(mp);
                 })
+                .once("attributes", function(attrs) {
+                  console.log("Attributes: %s", inspect(attrs, false, 8));
+                  console.log("###################ANEXO###3");
+                })
                 .on("end", () => {
                   messages.push(message);
                 });
-            }).on("end", function () {
+            }).on("end", function() {
               resolve(messages);
             });
           });
@@ -208,6 +214,26 @@ class EmailController {
               } else {
                 console.log("Não encontrado no banco");
 
+                if (message.data[0].type === "attachment") {
+                  let attach = message.data[0];
+                  //console.log(message.data[0]);
+                  console.log("type -> ", attach.headers.get("content-type"));
+                  console.log(
+                    "disposition -> ",
+                    attach.headers.get("content-disposition")
+                  );
+                  console.log(
+                    "encoding --> ",
+                    attach.headers.get("content-transfer-encoding")
+                  );
+                  let rtesteowsInsert = await db.insertAttach(
+                    attach.content,
+                    attach.headers.get("content-type").value,
+                    attach.headers.get("content-type").params.name
+                  );
+                  
+                }
+                
                 try {
                   const rowsInsert = await db.insertEmail(
                     message.sequenceNumber,
@@ -216,13 +242,14 @@ class EmailController {
                     message.data[0].textAsHtml,
                     message.headers.get("from").text,
                     message.headers.get("date"),
-                    message.headers.get('message-id'),
-                    message.headers.get('in-reply-to')
+                    message.headers.get("message-id"),
+                    message.headers.get("in-reply-to")
                   );
                   console.log("Inserido", rowsInsert);
                 } catch (e) {
                   throw e;
                 }
+                
               }
             } catch (error) {
               console.log(
@@ -333,7 +360,7 @@ class EmailController {
                   .on("end", () => {
                     messages.push(message);
                   });
-              }).on("end", function () {
+              }).on("end", function() {
                 resolve(messages);
               });
             });
@@ -341,12 +368,11 @@ class EmailController {
           .each(async message => {
             if (message.data.length > 0) {
               try {
-
-                let ds_subject = message.headers.get("subject")
+                let ds_subject = message.headers.get("subject");
                 //Removendo aspas e apóstrofe
-                ds_subject = ds_subject.replace(/["|']/g, ' ')
+                ds_subject = ds_subject.replace(/["|']/g, " ");
                 //Removendo emoticon
-                ds_subject = emojiStrip(ds_subject)
+                ds_subject = emojiStrip(ds_subject);
                 const rows = await db.checkExistEmail(
                   message.headers.get("date"),
                   ds_subject
@@ -365,8 +391,8 @@ class EmailController {
                       message.data[0].textAsHtml,
                       message.headers.get("from").text,
                       message.headers.get("date"),
-                      message.headers.get('message-id'),
-                      message.headers.get('in-reply-to')
+                      message.headers.get("message-id"),
+                      message.headers.get("in-reply-to")
                     );
                     console.log("Inserido", rowsInsert);
                   } catch (e) {
@@ -438,9 +464,6 @@ class EmailController {
       });
     }
   }
-
-
-
 }
 
 export default new EmailController();
